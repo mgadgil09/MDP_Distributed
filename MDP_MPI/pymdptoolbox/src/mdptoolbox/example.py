@@ -1,3 +1,4 @@
+# coding: utf-8
 # -*- coding: utf-8 -*-
 """Markov Decision Process (MDP) Toolbox: ``example`` module
 =========================================================
@@ -114,18 +115,6 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         If True, then the probability transition matrices will be returned in
         sparse format, otherwise they will be in dense format. Default: False.
 
-    Returns
-    -------
-    out : tuple
-        ``out[0]`` contains the transition probability matrix P  and ``out[1]``
-        contains the reward matrix R. If ``is_sparse=False`` then P is a numpy
-        array with a shape of ``(A, S, S)`` and R is a numpy array with a shape
-        of ``(S, A)``. If ``is_sparse=True`` then P is a tuple of length ``A``
-        where each ``P[a]`` is a scipy sparse CSR format matrix of shape
-        ``(S, S)``; R remains the same as in the case of ``is_sparse=False``.
-
-    Examples
-    --------
     >>> import mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> P
