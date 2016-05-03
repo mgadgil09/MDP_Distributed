@@ -380,12 +380,13 @@ class final_mdp():
             return _np.multiply(transition, reward).sum(1).reshape(self.S)
 
     def _startRun(self):
-        if self.verbose:
-            _printVerbosity('Iteration', 'Variation')
-
+        #if self.verbose:
+        #    _printVerbosity('Iteration', 'Variation')
+        print "start time: " , _time.time()
         self.time = _time.time()
 
-    def _endRun(self):
+    def _endRun(self,obj):
+        self = obj
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
 
@@ -393,8 +394,9 @@ class final_mdp():
             self.policy = tuple(self.policy.tolist())
         except AttributeError:
             self.policy = tuple(self.policy)
-
         self.time = _time.time() - self.time
+        endtime = _time.time() - self.time
+        print "end time:" , _time.time()
 
     def run(self):
         """Raises error because child classes should implement this function.
