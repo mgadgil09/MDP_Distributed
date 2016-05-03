@@ -56,18 +56,23 @@ def run(mdp_obj):
     mdp_obj._startRun()
     local_n = mdp_obj.S / size
     takeQ = np.empty((local_n,mdp_obj.A))
-    local_V = np.zeros(mdp_obj.S)
-    local_P = np.zeros(mdp_obj.S)
+    local_V = np.zeros(local_n)
+    local_P = np.zeros(local_n)
     global_V =np.zeros(mdp_obj.S)
     global_P =np.zeros(mdp_obj.S)
     newrank = -1
 
-    while True:
+    #takeQ = np.empty((local_n, mdp_obj.A))
+
+    for itr in xrange(4):
         mdp_obj.iter += 1
         local_a,local_b = get_range(rank,mdp_obj.S)
         Vprev = mdp_obj.V.copy()
-
+        #print ("rank is :" + str(rank) + " this is vprev: " + str(Vprev))
         # Bellman Operator: compute policy and value functions
+        #print(repr(local_a) + " , " + repr(local_b) + " , " + repr(local_n))
+        comm.bcast(mdp_obj.V, root=0)
+        comm.bcast(mdp_obj.policy, root=0)
         takeQ = mdp_obj._bellmanOperator_mpi(local_a, local_b, local_n)
         if rank == 0:
             local_P = takeQ.argmax(axis=1)
@@ -76,41 +81,41 @@ def run(mdp_obj):
             global_P[local_a:local_b] = local_P
             for i in xrange(1, size):
                 status = MPI.Status()
-                comm.Recv(takeQ, source = MPI.ANY_SOURCE, tag = MPI.ANY_TAG, status=status)
+                takeQ = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
                 newrank = status.Get_source()
-                la,lb = mdp_obj.get_range(newrank,mdp_obj.S)
+                la,lb = get_range(newrank,mdp_obj.S)
                 local_P = takeQ.argmax(axis=1)
                 local_V = takeQ.max(axis=1)
-                global_V[la : lb] = local_V
-                global_P[la : lb] = local_P
-            # print (repr(local_V) + "\n" + repr(local_P))
+                global_V[la:lb] = local_V
+                global_P[la:lb] = local_P
             mdp_obj.V = global_V
             mdp_obj.policy = global_P
+            comm.bcast(mdp_obj.V, root=0)
+            comm.bcast(mdp_obj.policy, root=0)
         else:
-            comm.send(takeQ, dest = 0, tag=rank)
-        comm.Bcast(mdp_obj.V, root=0)
-        comm.Bcast(mdp_obj.policy, root=0)
-
+            comm.send(takeQ, dest=0, tag=rank)
+        comm.bcast(mdp_obj.V, root=0)
+        comm.bcast(mdp_obj.policy, root=0)
         # The values, based on Q. For the function "max()": the option
         # "axis" means the axis along which to operate. In this case it
         # finds the maximum of the the rows. (Operates along the columns?)
         variation = getSpan(mdp_obj.V - Vprev)
+        #print("rank is: " + repr(rank) + " V is " + repr(mdp_obj.V) + "Vprev is " + repr(Vprev))
+        # if mdp_obj.verbose:
+        #     _printVerbosity(mdp_obj.iter, variation)
 
-        if mdp_obj.verbose:
-            _printVerbosity(mdp_obj.iter, variation)
+        # if variation < mdp_obj.thresh:
+        #     if mdp_obj.verbose:
+        #         print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
+        #     break
+        # elif mdp_obj.iter == mdp_obj.max_iter:
+        #     if mdp_obj.verbose:
+        #         print(_MSG_STOP_MAX_ITER)
+        #     break
+        #print str("this is v: ") + str(mdp_obj.V)
+        #print str("this is type of policy: ") + str(type(mdp_obj.policy))
+        #mdp_obj._endRun()
 
-        if variation < mdp_obj.thresh:
-            if mdp_obj.verbose:
-                print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
-            break
-        elif mdp_obj.iter == mdp_obj.max_iter:
-            if mdp_obj.verbose:
-                print(_MSG_STOP_MAX_ITER)
-            break
-
-    mdp_obj._endRun()
-    print(mdp_obj.V)
-    print(mdp_obj.policy)
 
 def _printVerbosity(iteration, variation):
     if isinstance(variation, float):

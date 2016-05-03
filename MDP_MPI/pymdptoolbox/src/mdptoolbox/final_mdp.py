@@ -241,24 +241,28 @@ class final_mdp():
         # P and V can be any object that supports indexing, so it is important
         # that you know they define a valid MDP before calling the
         # _bellmanOperator method. Otherwise the results will be meaningless.
-        Q = _np.empty((ln, self.A))
-        for ss in xrange(ln):
-            Q[ss] = _np.array(self.R)[:,ss] + 0.96 * self.myfunc_mpi(ss, ln)
+        #print(repr(a) + " , " + repr(b) + " , " + repr(ln))
+        Q = _np.empty((self.S, self.A))
+        for ss in xrange(a, b):
+            # print(ss,a,b,ln)
+            Q[ss] = _np.array(self.R)[:,ss] + 0.96 * self.myfunc_mpi(ss, a, b, ln)
+
         # Get the policy and value, for now it is being returned but...
         # Which way is better?
         # 1. Return, (policy, value)
         # print ('Size of Q is: ' + str(Q.shape))
-        return Q
+        return Q[a:b]
         #return (Q.argmax(axis=1), Q.max(axis=1))
         # 2. update self.policy and self.V directly
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
 
-    def myfunc_mpi(self, ss, ln):
+    def myfunc_mpi(self, ss, a, b, ln):
         arr = []
-        new_p = _np.transpose(_np.array(self.P)[:,[ss][:]].reshape(self.A, ln))
+        new_p = _np.transpose(_np.array(self.P)[:, ss][:, a:b].reshape(self.A, ln))
         for i in xrange(self.A):
-            arr.append(new_p[:,i].dot(self.V))
+            #print(self.V)
+            arr.append(new_p[:, i].dot(self.V[a:b]))
         arr = _np.array(arr).reshape(1, len(arr))
         return arr
 
@@ -304,6 +308,7 @@ class final_mdp():
         new_p = _np.transpose(_np.array(self.P)[:,[ss][:]].reshape(self.A, self.S))
         for i in xrange(self.A):
             arr.append(new_p[:,i].dot(self.V))
+            # print self.V
         arr = _np.array(arr).reshape(1, len(arr))
         return arr
 
