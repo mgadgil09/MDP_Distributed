@@ -74,7 +74,7 @@ def _printVerbosity(iteration, variation):
         print("{:>10}{:>12}".format(iteration, variation))
 
 class final_mdp():
-    
+
     """A Markov Decision Problem.
 
     Let ``S`` = the number of states, and ``A`` = the number of acions.
@@ -195,7 +195,7 @@ class final_mdp():
         self.S, self.A = _computeDimensions(transitions)
         self.P = self._computeTransition(transitions)
         self.R = self._computeReward(reward, transitions)
-        
+
 
         # the verbosity is by default turned off
         self.verbose = True
@@ -216,7 +216,7 @@ class final_mdp():
             R_repr += repr(self.R[aa]) + "\n"
         return(P_repr + "\n" + R_repr)
 
-    def _bellmanOperator_mpi(self, a, b, ln, V=None):
+    def _bellmanOperator_mpi(self, a, b, ln, V=None, rankk=None):
         # Apply the Bellman operator on the value function.
         #
         # Updates the value function and the Vprev-improving policy.
@@ -227,13 +227,16 @@ class final_mdp():
         # on the objects V attribute
         # print (a, b, ln)
         # print (rank)
+        #print "VV", rankk,V
+
         if V is None:
             # this V should be a reference to the data rather than a copy
             V = self.V
         else:
+            self.V=V
             # make sure the user supplied V is of the right shape
             try:
-                assert V.shape in ((ln,), (1, ln)), "V is not the " \
+                assert V.shape in ((self.S,), (1, self.S)), "V is not the " \
                     "right shape (Bellman operator)."
             except AttributeError:
                 raise TypeError("V must be a numpy array or matrix.")
@@ -245,7 +248,7 @@ class final_mdp():
         Q = _np.empty((self.S, self.A))
         for ss in xrange(a, b):
             # print(ss,a,b,ln)
-            Q[ss] = _np.array(self.R)[:,ss] + 0.96 * self.myfunc_mpi(ss, a, b, ln)
+            Q[ss] = _np.array(self.R)[:,ss] + 0.96 * self.myfunc_mpi(ss) #, a, b, ln)
 
         # Get the policy and value, for now it is being returned but...
         # Which way is better?
@@ -257,13 +260,22 @@ class final_mdp():
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
 
-    def myfunc_mpi(self, ss, a, b, ln):
+    def myfunc_mpi(self, ss): #, a, b, ln):
+        #if ss==1:
+        #    b=2
+        #    ln=2
+        #a=0
+        #b=4
+        #ln=4
         arr = []
-        new_p = _np.transpose(_np.array(self.P)[:, ss][:, a:b].reshape(self.A, ln))
+        new_p = _np.transpose(_np.array(self.P)[:, ss].reshape(self.A, self.S))
+
         for i in xrange(self.A):
             #print(self.V)
-            arr.append(new_p[:, i].dot(self.V[a:b]))
+            arr.append(new_p[:, i].dot(self.V))
         arr = _np.array(arr).reshape(1, len(arr))
+        #if arr.sum() ==0:
+        #    print a,b,ss,"arr",arr
         return arr
 
     def _bellmanOperator(self, V=None):

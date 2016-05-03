@@ -71,9 +71,12 @@ def run(mdp_obj):
         #print ("rank is :" + str(rank) + " this is vprev: " + str(Vprev))
         # Bellman Operator: compute policy and value functions
         #print(repr(local_a) + " , " + repr(local_b) + " , " + repr(local_n))
-        comm.bcast(mdp_obj.V, root=0)
-        comm.bcast(mdp_obj.policy, root=0)
-        takeQ = mdp_obj._bellmanOperator_mpi(local_a, local_b, local_n)
+        myV=comm.bcast(mdp_obj.V, root=0)
+        myP=comm.bcast(mdp_obj.policy, root=0)
+        #print "myV", rank, myV
+        #print rank, takeQ
+        takeQ = mdp_obj._bellmanOperator_mpi(local_a, local_b, local_n, V=myV, rankk=rank)
+        print rank, takeQ
         if rank == 0:
             local_P = takeQ.argmax(axis=1)
             local_V = takeQ.max(axis=1)
@@ -90,12 +93,12 @@ def run(mdp_obj):
                 global_P[la:lb] = local_P
             mdp_obj.V = global_V
             mdp_obj.policy = global_P
-            comm.bcast(mdp_obj.V, root=0)
-            comm.bcast(mdp_obj.policy, root=0)
+            #comm.bcast(mdp_obj.V, root=0)
+            #comm.bcast(mdp_obj.policy, root=0)
         else:
             comm.send(takeQ, dest=0, tag=rank)
-        comm.bcast(mdp_obj.V, root=0)
-        comm.bcast(mdp_obj.policy, root=0)
+        #comm.bcast(mdp_obj.V, root=0)
+        #comm.bcast(mdp_obj.policy, root=0)
         # The values, based on Q. For the function "max()": the option
         # "axis" means the axis along which to operate. In this case it
         # finds the maximum of the the rows. (Operates along the columns?)
@@ -112,8 +115,8 @@ def run(mdp_obj):
         #     if mdp_obj.verbose:
         #         print(_MSG_STOP_MAX_ITER)
         #     break
-        #print str("this is v: ") + str(mdp_obj.V)
-        #print str("this is type of policy: ") + str(type(mdp_obj.policy))
+        print str("rank is :")+ str(rank) + str("this is v: ") + str(mdp_obj.V)
+        print str("rank is :")+ str(rank) + str("this is policy: ") + str(mdp_obj.policy)
         #mdp_obj._endRun()
 
 
