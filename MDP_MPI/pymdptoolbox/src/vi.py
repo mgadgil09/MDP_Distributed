@@ -8,6 +8,7 @@ import mdptoolbox.example as example
 from mpi4py import MPI
 import mdptoolbox
 from mdptoolbox.final_mdp import final_mdp
+np.set_printoptions(threshold='nan')
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -138,6 +139,10 @@ def _printVerbosity(iteration, variation):
         print("{:>10}{:>12d}".format(iteration, variation))
     else:
         print("{:>10}{:>12}".format(iteration, variation))
+def gridproblem():
+    P = np.load('/home/madhura/DMProject/MDP_MPI/pymdptoolbox/P.npy')
+    R = np.load('/home/madhura/DMProject/MDP_MPI/pymdptoolbox/R.npy')
+    return (P,R)
 
 def getSpan(array):
     """Return the span of `array`
@@ -147,7 +152,8 @@ def getSpan(array):
     """
     return array.max() - array.min()
 
-P, R = mdptoolbox.example.forest(S=100)
+#P, R = mdptoolbox.example.forest(S=5000)
+P, R = gridproblem()
 mdp_obj = final_mdp(P,R,0.96)
 
 initial_value=0
