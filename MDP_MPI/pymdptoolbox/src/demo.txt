@@ -1,0 +1,13 @@
+100 states
+mpiexec -n 1 python -m cProfile -s cumtime vi.py > output.txt
+
+
+mpiexec -n 10 python -m cProfile -s cumtime vi.py > output.txt
+
+Grid Problem
+
+comment P,R
+mpiexec -n 1 python -m cProfile -s cumtime vi.py > output.txt
+
+mpiexec -n 10 python -m cProfile -s cumtime vi.py > output.txt
+ 

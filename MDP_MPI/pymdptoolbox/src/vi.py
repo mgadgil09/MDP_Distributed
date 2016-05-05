@@ -140,8 +140,8 @@ def _printVerbosity(iteration, variation):
     else:
         print("{:>10}{:>12}".format(iteration, variation))
 def gridproblem():
-    P = np.load('/home/madhura/DMProject/MDP_MPI/pymdptoolbox/P.npy')
-    R = np.load('/home/madhura/DMProject/MDP_MPI/pymdptoolbox/R.npy')
+    P = np.load('../P.npy')
+    R = np.load('../R.npy')
     return (P,R)
 
 def getSpan(array):
@@ -152,8 +152,8 @@ def getSpan(array):
     """
     return array.max() - array.min()
 
-#P, R = mdptoolbox.example.forest(S=5000)
-P, R = gridproblem()
+P, R = mdptoolbox.example.forest(S=100)
+# P, R = gridproblem()
 mdp_obj = final_mdp(P,R,0.96)
 
 initial_value=0
